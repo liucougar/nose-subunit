@@ -15,6 +15,7 @@ class TestSkip(SubunitPluginTester):
         result = self.testResult
         self.assertEqual(result.testsRun, 1)
         self.assertEqual(len(result.skips), 1)
+        self.assertFalse("multipart" in self.output)
     def makeSuite(self):
         class skip(unittest.TestCase):
             def runTest(self):

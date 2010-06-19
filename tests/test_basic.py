@@ -11,6 +11,7 @@ class TestBasic(SubunitPluginTester):
         self.assertEqual(result.testsRun, 3)
         self.assertEqual(len(result.errors), 1)
         self.assertEqual(len(result.failures), 1)
+        self.assertFalse("multipart" in self.output)
         self.assertTrue("NoSuchVariable" in result.errors[0][1]["traceback"].iter_bytes()[0])
         self.assertTrue("self.assertTrue(False)" in result.failures[0][1]["traceback"].iter_bytes()[0])
 
