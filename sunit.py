@@ -2,8 +2,9 @@
 output.
 """
 
-#can't name this file as subunit, otherwise the following line fails
+from new import instancemethod
 from testtools.content import Content, ContentType, TracebackContent
+#can't name this file as subunit, otherwise the following line fails
 from subunit import TestProtocolClient
 
 from nose.plugins import Plugin
@@ -81,12 +82,20 @@ class SubunitTestResult(TestProtocolClient):
             self._stream.write("%s\n" % reason)
             self._stream.write("]\n")
 
+    #the nose testrunner would call these two functions
+    def printErrors(self, *args):
+        pass
+    def printSummary(self, *args):
+        pass
+    
 class Subunit(Plugin):
     """Output test results in subunit format
     """
     
     name = 'subunit'
-    score = 2 # run late
+    #run before multiprocess plugin, otherwise prepareTestRunner 
+    #won't be able to properly monkey patch runner
+    score = 1100
 
     def configure(self, options, conf):
         if not self.can_configure:
@@ -98,19 +107,16 @@ class Subunit(Plugin):
         except:
             self.useDetails = False
 
-    def prepareTestResult(self, result):
-        #import pdb;pdb.set_trace()
-        if isinstance(result,SubunitTestResult):
-            return
-        newresult = SubunitTestResult(result.stream,result.descriptions,
-            result.config, result.errorClasses, useDetails=self.useDetails)
-        for f in TestProtocolClient.__dict__.keys():
-            if callable(getattr(TestProtocolClient,f)) and f[0]!="_":
-                setattr(result,f,getattr(newresult,f))
-        def dummy(*args, **kwargs):
-            #import pdb;pdb.set_trace()
-            pass
-        for f in ["printErrors", "printSummary"]:
-            setattr(result,f,dummy)
-        return newresult
-        #return newresult
+    def prepareTestRunner(self, runner):
+        #replace _makeResult in the default nose TestRunner to return
+        #our implementation SubunitTestResult
+        if not hasattr(runner, "_makeResult"):
+            raise Exception("runner does not have _makeResult method, don't know how to attach to it.")
+        
+        runner.useDetails = self.useDetails
+        def _makeResult(self):
+            result = SubunitTestResult(self.stream,self.descriptions,
+                self.config, useDetails=self.useDetails)
+            return result
+        runner._makeResult = instancemethod(_makeResult, runner, runner.__class__)
+        return runner
