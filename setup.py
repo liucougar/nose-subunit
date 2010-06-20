@@ -7,7 +7,7 @@ setup(
     long_description="""Output of the nose testing tool result into subunit format.""",
     author="liucougar",
     author_email="liucougar@gmail.com",
-    url="http://www.liucougar.net/blog/",
+    url="http://www.liucougar.net/blog/nose-subunit",
     #download_url="",
     platforms="Independent",
     install_requires = [
