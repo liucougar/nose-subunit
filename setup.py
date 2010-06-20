@@ -3,12 +3,13 @@ from setuptools import setup
 setup(
     name="nose-subunit",
     version="0.1",
-    description="""
-Output of the nose testing tool result into subunit format.""",
+    description="""Subunit output adapter for nose""",
+    long_description="""Output of the nose testing tool result into subunit format.""",
     author="liucougar",
     author_email="liucougar@gmail.com",
     url="http://www.liucougar.net/blog/",
     #download_url="",
+    platforms="Independent",
     install_requires = [
         "nose>=0.11",
     ],
@@ -20,14 +21,14 @@ Output of the nose testing tool result into subunit format.""",
         'nose.plugins.0.10': ['subunit = sunit:Subunit'], #, 'warning = warning:Warnings'
     },
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 3 - Alpha',
         'Environment :: Console',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Python Software Foundation License',
-        'Operating System :: POSIX',
+        'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Topic :: Software Development',
+        'Topic :: Software Development :: Testing',
     ],
-    keywords='test unittest nose',
+    keywords='test unittest nosetests nose plugin',
     test_suite = 'nose.collector'
 )

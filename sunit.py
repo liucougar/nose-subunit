@@ -163,7 +163,6 @@ don't know how to attach to it.''')
                                       verbosity=self.config.verbosity,
                                       config=self.config,
                                       loaderClass=self.loaderClass)
-
         
         runner.isTop = not self.topAssigned
 
