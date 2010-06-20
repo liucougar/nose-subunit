@@ -4,11 +4,11 @@ setup(
     name="nose-subunit",
     version="0.1",
     description="""Subunit output adapter for nose""",
-    long_description="""Output of the nose testing tool result into subunit format.""",
+    long_description="""Change output of the nose testing tool result into subunit format.""",
     author="liucougar",
     author_email="liucougar@gmail.com",
     url="http://www.liucougar.net/blog/nose-subunit",
-    #download_url="",
+    download_url="http://pypi.python.org/pypi/nose-subunit/",
     platforms="Independent",
     install_requires = [
         "nose>=0.11",
