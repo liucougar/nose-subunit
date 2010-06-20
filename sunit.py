@@ -21,46 +21,51 @@ class TextContent(Content):
 
 class SubunitTestResult(TestProtocolClient):
     def __init__(self, stream, descriptions, config=None,
-                 errorClasses=None, useDetails=False, 
-                 isTop=False, **kwargs): #kwargs capture all unused arguments, including: verbosity
+                 errorClasses=None, 
+                 #kwargs capture all other arguments, including unused 
+                 #ones: verbosity
+                 **kwargs): 
         if errorClasses is None:
             errorClasses = {}
         self.errorClasses = errorClasses
-        if config is None:
-            config = Config()
+        #if config is None:
+        #    config = Config()
         self.config = config
-        self.useDetails = useDetails
+        self.descriptions = descriptions
         self.stream = stream #this is to make multiprocess plugin happy
-        self._isTop = isTop
+        self.isTop = kwargs.get("isTop", False)
+        self.useDetails = kwargs.get("useDetails", False)
         TestProtocolClient.__init__(self, stream)
     
     def _getArgs(self, test, err):
         if self.useDetails:
-            details = {"traceback":TracebackContent(err,test)}
-            error=None
+            details = {"traceback":TracebackContent(err, test)}
+            error = None
         else:
-            error=err
+            error = err
             details = None
         
         return error, details
 
-    def addError(self, test, err): #modified from nose/result.addError
+    #modified from nose/result.addError
+    def addError(self, test, error): # pylint: disable-msg=W0221
         """Overrides normal addError to add support for
         errorClasses. If the exception is a registered class, the
         error will be added to the list for that class, not errors.
         """
         stream = self._stream #getattr(self, '_stream', None)
-        ec, ev, tb = err
+        ecls, evt, tbk = error # pylint: disable-msg=W0612
 
+        # pylint: disable-msg=W0612
         for cls, (storage, label, isfail) in self.errorClasses.items():
-            if isclass(ec) and issubclass(ec, cls):
+            if isclass(ecls) and issubclass(ecls, cls):
                 if isfail:
                     test.passed = False
 
                 # Might get patched into a streamless result
                 if stream is not None:
                     if not isfail:
-                        reason = _exception_detail(err[1])
+                        reason = _exception_detail(evt)
                         if reason:
                             if self.useDetails:
                                 details = {"reason":TextContent(reason)}
@@ -68,14 +73,15 @@ class SubunitTestResult(TestProtocolClient):
                             else:
                                 details = None
 
-                        self._addNonFailOutcome(label.lower(),test,reason=reason,details=details)
+                        self._addNonFailOutcome(label.lower(), test, 
+                          reason=reason, details=details)
                 return
-        error, details = self._getArgs(test, err)
-        TestProtocolClient.addError(self,test, error, details=details)
+        error, details = self._getArgs(test, error)
+        TestProtocolClient.addError(self, test, error, details=details)
 
-    def addFailure(self, test, err):
-        error, details = self._getArgs(test, err)
-        TestProtocolClient.addFailure(self,test, error, details=details)
+    def addFailure(self, test, error): # pylint: disable-msg=W0221
+        error, details = self._getArgs(test, error)
+        TestProtocolClient.addFailure(self, test, error, details=details)
 
     def _addNonFailOutcome(self, outcome, test, reason=None, details=None):
         """Report a non-failure error (such as skip)"""
@@ -91,15 +97,15 @@ class SubunitTestResult(TestProtocolClient):
     #the nose testrunner would call these two functions
     def printErrors(self, *args):
         pass
-    def printSummary(self, *args):
+    def printSummary(self, *args): # pylint: disable-msg=W0613
         #this function is only being called on the top SubunitTestResult,
         #so no need to check isTop here
         self.addTime()
 
 def _getOption(options, name, default):
     try:
-        return getattr(options,name)
-    except:
+        return getattr(options, name)
+    except AttributeError:
         return default
 
 class Subunit(Plugin):
@@ -111,6 +117,12 @@ class Subunit(Plugin):
     #won't be able to properly monkey patch runner
     score = 1100
 
+    useDetails = False
+    multiprocess_workers = 0
+    config = None
+    topAssigned = False
+    loaderClass = None
+    
     def configure(self, options, conf):
         if not self.can_configure:
             return
@@ -119,23 +131,18 @@ class Subunit(Plugin):
         self.config = conf
         
         #detailedErrors is defined in failuredetail plugin
-        self.useDetails = _getOption(options,"detailedErrors",False)
+        self.useDetails = _getOption(options, 
+          "detailedErrors", self.useDetails)
         #multiprocess_workers defined in multiprocess plugin
-        self.multiprocess_workers = _getOption(options,"multiprocess_workers",0)
+        self.multiprocess_workers = _getOption(options, 
+          "multiprocess_workers", self.multiprocess_workers)
 
-    def _getOtherOption(self, options, name, default):
-        try:
-            return getattr(options,name)
-        except:
-            return default
-
+    #copied from multiprocess plugin
     def prepareTestLoader(self, loader):
         """Remember loader class so MultiProcessTestRunner can instantiate
         the right loader.
         """
-        self.loaderClass = loader.__class__ #copied from multiprocess plugin
-        
-        self._topAssigned = False
+        self.loaderClass = loader.__class__ 
 
     #so we stick with prepareTestResult for now
     def prepareTestRunner(self, runner):
@@ -143,7 +150,8 @@ class Subunit(Plugin):
         #our implementation SubunitTestResult
 
         if not hasattr(runner, "_makeResult"):
-            raise Exception("runner does not have _makeResult method, don't know how to attach to it.")
+            raise Exception('''runner does not have _makeResult method,\
+don't know how to attach to it.''')
         
         #this plugin runs before  multiprocess plugin, and this function
         #return a runner, so it will prevent multiprocess.prepareTestRunner
@@ -157,19 +165,19 @@ class Subunit(Plugin):
                                       loaderClass=self.loaderClass)
 
         
-        runner._isTop = not self._topAssigned
+        runner.isTop = not self.topAssigned
 
-        self._topAssigned = True
+        self.topAssigned = True
 
         runner.useDetails = self.useDetails
         def _makeResult(self):
-            result = SubunitTestResult(self.stream,self.descriptions,
-                self.config, useDetails=self.useDetails, isTop=self._isTop)
+            result = SubunitTestResult(self.stream, self.descriptions,
+                self.config, useDetails=self.useDetails, isTop=self.isTop)
             return result
-        runner._makeResult = instancemethod(_makeResult, runner, runner.__class__)
+        runner._makeResult = instancemethod(_makeResult, 
+          runner, runner.__class__)
         return runner
     
-    def prepareTestResult(self, result):
-        if result._isTop:
+    def prepareTestResult(self, result): # pylint: disable-msg=R0201
+        if result.isTop:
             result.addTime()
-        return
