@@ -88,10 +88,18 @@ class SubunitTestResult(TestProtocolClient):
         if reason is None:
             self._addOutcome(outcome, test, error=None, details=details)
         else:
-            self._stream.write(outcome+": %s [\n" % test.id())
+            self._stream.write(outcome+": %s [\n" % self.getDescription(test))
             self._stream.write("%s\n" % reason)
             self._stream.write("]\n")
 
+    def getDescription(self, test):
+        if hasattr(test, "id"):
+            return test.id()
+        try:
+            return test.shortDescription() or str(test)
+        except AttributeError:
+            return str(test)
+    
     def addTime(self):
         self.time(datetime.now(iso8601.UTC))
     #the nose testrunner would call these two functions
