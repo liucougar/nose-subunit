@@ -48,7 +48,11 @@ class SubunitTestResult(TestProtocolClient):
         if not hasattr(test, 'id'):
             def idfunc(*args):
                 if hasattr(test, 'context'):
-                    return str(test.context)
+                    cont = test.context
+                    if hasattr(cont, '__module__'):
+                        return cont.__module__+"."+cont.__name__
+                    else:
+                        return str(test.context)
                 return str(test)
             test.id = idfunc
         return error, details
