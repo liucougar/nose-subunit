@@ -10,12 +10,15 @@ class ServerTestResult(unittest.TestResult):
     def __init__(self):
         unittest.TestResult.__init__(self)
         self.skips = []
+        self.times = []
     def addSkip(self, test, error=None, details=None):
         self.skips.append((test,details or self._exc_info_to_string(error, test)))
     def addError(self, test, error=None, details=None):
         self.errors.append((test, details or self._exc_info_to_string(error, test)))
     def addFailure(self, test, error=None, details=None):
         self.failures.append((test, details or self._exc_info_to_string(error, test)))
+    def time(self, a_datetime):
+        self.times.append(a_datetime)
     #def _exc_info_to_details(error, test):
 
 class SubunitPluginTester(PluginTester, unittest.TestCase):

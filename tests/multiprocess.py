@@ -1,9 +1,7 @@
-#used by test_multiprocess.py
-#don't name this as test*, otherwise nosetest would find this and execute it
 from time import sleep
 
 def test1():
-    pass
+    sleep(1)
 
 def test2():
-    pass
+    sleep(1)

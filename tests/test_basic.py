@@ -14,6 +14,9 @@ class TestBasic(SubunitPluginTester):
         self.assertFalse("multipart" in self.output)
         self.assertTrue("NoSuchVariable" in result.errors[0][1]["traceback"].iter_bytes()[0])
         self.assertTrue("self.assertTrue(False)" in result.failures[0][1]["traceback"].iter_bytes()[0])
+        #make sure printSummary of the default TestResult is 
+        #not being called
+        self.assertFalse("----------" in self.output)
 
     def makeSuite(self):
         #import pdb;pdb.set_trace()

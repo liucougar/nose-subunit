@@ -20,3 +20,11 @@ class TestMultiProcess(SubunitPluginTester):
         self.assertEqual(len(result.errors), 0)
         self.assertTrue("multiprocess.test1" in self.output)
         self.assertTrue("multiprocess.test2" in self.output)
+        #make sure the multiprocess does use 2 processes to execute
+        #the tests (time taken to execute two sleep(1) should be 
+        #greate than 1 less than 2 seconds
+        delta = result.times[-1]-result.times[0]
+        self.assertEqual(delta.seconds,1)
+        #make sure printSummary of the default TestResult is 
+        #not being called
+        self.assertFalse("----------" in self.output)
