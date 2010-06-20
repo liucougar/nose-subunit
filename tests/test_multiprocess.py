@@ -1,9 +1,8 @@
 import unittest
-from tests import SubunitPluginTester
+from tests import SubunitPluginTester, getTestPath
 import sunit
 
 from nose.plugins.multiprocess import MultiProcess
-from os import path
 
 class TestMultiProcess(SubunitPluginTester):
     #enable MultiProcess nose plugin
@@ -11,7 +10,7 @@ class TestMultiProcess(SubunitPluginTester):
     args = ['--processes=2'] #enable 2 processes
     #multiprocess can't load a inline testcase (created by makeSuite),
     #so suitepath has to be used
-    suitepath = path.join(path.dirname(__file__),"multiprocess.py")
+    suitepath = getTestPath("multiprocess.py")
     def runTest(self):
         self.getFedSubunitServer()
         result = self.testResult

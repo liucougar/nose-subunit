@@ -1,10 +1,15 @@
 import unittest
+from os import path
+
 from nose.plugins import PluginTester
 from subunit import TestProtocolServer
 
 import sunit
 
 from StringIO import StringIO
+
+def getTestPath(t):
+    return path.join(__path__[0], t) #path.dirname(__file__)
 
 class ServerTestResult(unittest.TestResult):
     def __init__(self):
