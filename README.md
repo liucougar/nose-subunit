@@ -5,9 +5,13 @@ This [nose] plugin changes the default output to [subunit] format. This can be u
 
 Installation
 -------
-Issue the following command:
+nose-subunit apparently depends on both `nosetests` and `subunit`.
+
+The following command would install `nose-subunit` and `nosetests` if it's not already installed:
 
 	easy_install nose-subunit
+
+However, the above command won't pull in `subunit`, because subunit is not easy-installable. Please install subunit through your distribution's package management system (`emerge`, `yum` etc.), or install it manually.
 
 Usage
 -----
@@ -33,4 +37,3 @@ under the root of nose-subunit, run
   [subunit]: https://launchpad.net/subunit/
   [buildbot]: http://buildbot.net/
   [report your experience]: mailto:liucougar@gmail.com
-
