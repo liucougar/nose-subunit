@@ -12,6 +12,7 @@ from subunit import TestProtocolClient, iso8601
 from nose.plugins import Plugin
 from nose.util import isclass
 from nose.result import _exception_detail
+from nose.failure import Failure as NoseFailure
 
 class TextContent(Content):
     def __init__(self, value, acontenttype=None):
@@ -56,6 +57,22 @@ class SubunitTestResult(TestProtocolClient):
                 return str(test)
             test.id = idfunc
         return error, details
+
+    #properly assign an id() function to nose.failure.Failure (caused
+    #by import error (or other errors which prevents loading of a file)
+    #so in such a case, subunit won't print nose.failure.Failure.runTest
+    #as the test case name
+    def beforeTest(self, test):
+        if isinstance(test.test, NoseFailure):
+            def id(*args):
+                #test.address() returns a 3 item tuple, the first one
+                #is the abspath to the py file, the second one is
+                #the python module name
+                #the default output would use test.__str__ as the id
+                #of a nose.failure.Failure, but I think the module
+                #name is more useful
+                return test.address()[1]
+            test.id=id #test.__str__
 
     #modified from nose/result.addError
     def addError(self, test, error): # pylint: disable-msg=W0221

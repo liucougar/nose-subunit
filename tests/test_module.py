@@ -27,3 +27,11 @@ class TestModuleWithMultiProcess(TestModule):
     '''make sure this works with multiprocess plugin as well'''
     plugins = [sunit.Subunit(), MultiProcess()]
     args = ['--processes=1'] #enable 2 processes
+
+class TestImportError(SubunitPluginTester):
+    suitepath = getTestPath("importerror.py")
+    def runTest(self):
+        #make sure we don't see nose.failure.Failure.runTest
+        self.assertFalse("nose.failure.Failure.runTest" in self.output)
+        #instead we should see the name of the module
+        self.assertTrue("tests.importerror" in self.output)
