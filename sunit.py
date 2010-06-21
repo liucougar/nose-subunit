@@ -76,12 +76,11 @@ class SubunitTestResult(TestProtocolClient):
                 if stream is not None:
                     if not isfail:
                         reason = _exception_detail(evt)
-                        if reason:
-                            if self.useDetails:
-                                details = {"reason":TextContent(reason)}
-                                reason = None
-                            else:
-                                details = None
+                        if reason and self.useDetails:
+                            details = {"reason":TextContent(reason)}
+                            reason = None
+                        else:
+                            details = None
 
                         self._addNonFailOutcome(label.lower(), test, 
                           reason=reason, details=details)
