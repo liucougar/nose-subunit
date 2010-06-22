@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="nose-subunit",
-    version="0.1",
+    version="0.1.1",
     description="""Subunit output adapter for nose""",
     long_description="""Change output of the nose testing tool result into subunit format.""",
     author="liucougar",
