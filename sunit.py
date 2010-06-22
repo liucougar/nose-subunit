@@ -47,7 +47,7 @@ class SubunitTestResult(TestProtocolClient):
             details = None
         
         if not hasattr(test, 'id'):
-            def idfunc(*args):
+            def idfunc(*args): # pylint: disable-msg=W0613
                 if hasattr(test, 'context'):
                     cont = test.context
                     if hasattr(cont, '__module__'):
@@ -62,9 +62,9 @@ class SubunitTestResult(TestProtocolClient):
     #by import error (or other errors which prevents loading of a file)
     #so in such a case, subunit won't print nose.failure.Failure.runTest
     #as the test case name
-    def beforeTest(self, test):
+    def beforeTest(self, test): # pylint: disable-msg=R0201
         if isinstance(test.test, NoseFailure):
-            def id(*args):
+            def newid(*args): # pylint: disable-msg=W0613
                 #test.address() returns a 3 item tuple, the first one
                 #is the abspath to the py file, the second one is
                 #the python module name
@@ -72,7 +72,7 @@ class SubunitTestResult(TestProtocolClient):
                 #of a nose.failure.Failure, but I think the module
                 #name is more useful
                 return test.address()[1]
-            test.id=id #test.__str__
+            test.id = newid #test.__str__
 
     #modified from nose/result.addError
     def addError(self, test, error): # pylint: disable-msg=W0221
