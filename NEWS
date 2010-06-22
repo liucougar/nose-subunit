@@ -1,0 +1,8 @@
+2010-06-21 liucougar <liucougar@gmail.com>
+  0.1.1 Bug Fix Release: better handling of various error cases
+    * Properly handle package level setup failures
+    * fixed a bug in addError when -d option is used and a test is skipped
+    * better report of failure caused by import errors
+
+2010-06-20 liucougar <liucougar@gmail.com>
+  0.1 initial release with unit test
