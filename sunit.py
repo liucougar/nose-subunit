@@ -83,7 +83,7 @@ class SubunitTestResult(TestProtocolClient):
     #nose runner, we have to detect that case and call it manually in
     #addError to have wellformed subunit output
     def startTest(self, test):
-        test.__subunit_started = True
+        test._subunit_started = True
         TestProtocolClient.startTest(self, test)
         
     #modified from nose/result.addError
@@ -95,7 +95,7 @@ class SubunitTestResult(TestProtocolClient):
         
         fixTestCase(test)
         #manually call startTest if it's not already called
-        if not getattr(test, '__subunit_started', False):
+        if not getattr(test, '_subunit_started', False):
             self.startTest(test)
 
         ecls, evt, tbk = error # pylint: disable-msg=W0612

@@ -37,8 +37,14 @@ class SubunitPluginTester(PluginTester, unittest.TestCase):
         self.testResult = ServerTestResult()
         self.server = TestProtocolServer(self.testResult,self.serverIO)
         #print self.output,
+        lastline = ""
+        print self.output
         for line in self.output:
             self.server.lineReceived(line)
+            if line.startswith("test:") and line==lastline:
+                raise Exception('subunit output should not contain two consecutive identical lines starting with "tests:"')
+            lastline = line
+
         return self.server
     #args = ['-s']
     #env = {'EVEN_FANCIER': '1'}
