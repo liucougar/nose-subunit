@@ -50,6 +50,7 @@ class SubunitTestResult(TestProtocolClient):
         self.stream = stream #this is to make multiprocess plugin happy
         self.isTop = kwargs.get("isTop", False)
         self.useDetails = kwargs.get("useDetails", False)
+        self._wassuccess = True
         TestProtocolClient.__init__(self, stream)
     
     def _getArgs(self, test, err):
@@ -97,7 +98,6 @@ class SubunitTestResult(TestProtocolClient):
         if not getattr(test, '__subunit_started', False):
             self.startTest(test)
 
-        stream = self._stream #getattr(self, '_stream', None)
         ecls, evt, tbk = error # pylint: disable-msg=W0612
 
         # pylint: disable-msg=W0612
@@ -106,26 +106,29 @@ class SubunitTestResult(TestProtocolClient):
                 if isfail:
                     test.passed = False
 
-                # Might get patched into a streamless result
-                if stream is not None:
-                    if not isfail:
-                        reason = _exception_detail(evt)
-                        if reason and self.useDetails:
-                            details = {"reason":TextContent(reason)}
-                            reason = None
-                        else:
-                            details = None
+                if not isfail:
+                    reason = _exception_detail(evt)
+                    if reason and self.useDetails:
+                        details = {"reason":TextContent(reason)}
+                        reason = None
+                    else:
+                        details = None
 
-                        self._addNonFailOutcome(label.lower(), test, 
-                          reason=reason, details=details)
-                return
+                    self._addNonFailOutcome(label.lower(), test, 
+                        reason=reason, details=details)
+                    return
+        self._wassuccess = False
         error, details = self._getArgs(test, error)
         TestProtocolClient.addError(self, test, error, details=details)
 
     def addFailure(self, test, error): # pylint: disable-msg=W0221
+        self._wassuccess = False
         fixTestCase(test)
         error, details = self._getArgs(test, error)
         TestProtocolClient.addFailure(self, test, error, details=details)
+
+    def wasSuccessful(self):
+        return self._wassuccess
 
     def _addNonFailOutcome(self, outcome, test, reason=None, details=None):
         """Report a non-failure error (such as skip)"""
