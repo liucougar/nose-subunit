@@ -12,14 +12,15 @@ class TestModule(SubunitPluginTester):
     def runTest(self):
         self.getFedSubunitServer()
         result = self.testResult
-        self.assertEqual(result.testsRun, 0)
-        self.assertEqual(len(result.errors), 0)
+        self.assertEqual(result.testsRun, 1)
+        self.assertEqual(len(result.errors), 1)
         self.assertEqual(len(result.failures), 0)
         self.assertFalse("multipart" in self.output)
         self.assertTrue("raise Exception" in self.output)
         #make sure printSummary of the default TestResult is 
         #not being called
         self.assertFalse("----------" in self.output)
+        print self.output
 
 from nose.plugins.multiprocess import MultiProcess
 
@@ -31,6 +32,10 @@ class TestModuleWithMultiProcess(TestModule):
 class TestImportError(SubunitPluginTester):
     suitepath = getTestPath("importerror.py")
     def runTest(self):
+        self.getFedSubunitServer()
+        result = self.testResult
+        self.assertEqual(result.testsRun, 1)
+        self.assertEqual(len(result.errors), 1)
         #make sure we don't see nose.failure.Failure.runTest
         self.assertFalse("nose.failure.Failure.runTest" in self.output)
         #instead we should see the name of the module

@@ -20,6 +20,20 @@ class TextContent(Content):
             acontenttype = ContentType("text","plain")
         Content.__init__(self, acontenttype, lambda:value.encode("utf8"))
 
+def fixTestCase(test):
+    if not hasattr(test, 'id'):
+        def idfunc(*args): # pylint: disable-msg=W0613
+            if hasattr(test, 'context'):
+                cont = test.context
+                if hasattr(cont, '__module__'):
+                    return cont.__module__+"."+cont.__name__
+                elif hasattr(cont, '__name__'):
+                    return cont.__name__
+                else:
+                    return str(test.context)
+            return str(test)
+        test.id = idfunc
+
 class SubunitTestResult(TestProtocolClient):
     def __init__(self, stream, descriptions, config=None,
                  errorClasses=None, 
@@ -45,17 +59,7 @@ class SubunitTestResult(TestProtocolClient):
         else:
             error = err
             details = None
-        
-        if not hasattr(test, 'id'):
-            def idfunc(*args): # pylint: disable-msg=W0613
-                if hasattr(test, 'context'):
-                    cont = test.context
-                    if hasattr(cont, '__module__'):
-                        return cont.__module__+"."+cont.__name__
-                    else:
-                        return str(test.context)
-                return str(test)
-            test.id = idfunc
+
         return error, details
 
     #properly assign an id() function to nose.failure.Failure (caused
@@ -74,12 +78,25 @@ class SubunitTestResult(TestProtocolClient):
                 return test.address()[1]
             test.id = newid #test.__str__
 
+    #in the case of import module failure, startTest is not called by
+    #nose runner, we have to detect that case and call it manually in
+    #addError to have wellformed subunit output
+    def startTest(self, test):
+        test.__subunit_started = True
+        TestProtocolClient.startTest(self, test)
+        
     #modified from nose/result.addError
     def addError(self, test, error): # pylint: disable-msg=W0221
         """Overrides normal addError to add support for
         errorClasses. If the exception is a registered class, the
         error will be added to the list for that class, not errors.
         """
+        
+        fixTestCase(test)
+        #manually call startTest if it's not already called
+        if not getattr(test, '__subunit_started', False):
+            self.startTest(test)
+
         stream = self._stream #getattr(self, '_stream', None)
         ecls, evt, tbk = error # pylint: disable-msg=W0612
 
@@ -106,6 +123,7 @@ class SubunitTestResult(TestProtocolClient):
         TestProtocolClient.addError(self, test, error, details=details)
 
     def addFailure(self, test, error): # pylint: disable-msg=W0221
+        fixTestCase(test)
         error, details = self._getArgs(test, error)
         TestProtocolClient.addFailure(self, test, error, details=details)
 
