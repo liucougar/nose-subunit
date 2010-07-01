@@ -20,7 +20,7 @@ Enable this plugin with `--with-subunit`. This plugin is known to work with foll
   - `skip` plugin
   - `multiprocess` plugin
   - `failuredetail` plugin
-  - `stopOnFailure` builtin option (enabled by `-x`/`--stop`)
+  - `stopOnFailure` builtin feature (enabled by `-x`/`--stop`)
 
 The following plugins are known to conflict with subunit plugin:
 
