@@ -1,10 +1,10 @@
 import unittest
 import warnings
 
-import sunit
+from tests import SubunitPluginTester, getTestPath
 
-from tests import SubunitPluginTester
 class TestBasic(SubunitPluginTester):
+    suitepath = getTestPath('basic.py')
     def runTest(self):
         self.getFedSubunitServer()
         result = self.testResult
@@ -17,18 +17,5 @@ class TestBasic(SubunitPluginTester):
         #make sure printSummary of the default TestResult is 
         #not being called
         self.assertFalse("----------" in self.output)
-
-    def makeSuite(self):
-        #import pdb;pdb.set_trace()
-        class failure(unittest.TestCase):
-            def runTest(self):
-                self.assertTrue(False)
-        class success(unittest.TestCase):
-            def runTest(self):
-                assert True
-        class error(unittest.TestCase):
-            def runTest(self):
-                l=NoSuchVariable
-        return unittest.TestSuite([failure(),success(),error()])
         
     

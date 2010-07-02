@@ -103,9 +103,6 @@ class SubunitTestResult(TestProtocolClient):
         # pylint: disable-msg=W0612
         for cls, (storage, label, isfail) in self.errorClasses.items():
             if isclass(ecls) and issubclass(ecls, cls):
-                if isfail:
-                    test.passed = False
-
                 if not isfail:
                     reason = _exception_detail(evt)
                     if reason and self.useDetails:
@@ -119,10 +116,13 @@ class SubunitTestResult(TestProtocolClient):
                     return
         self._wassuccess = False
         error, details = self._getArgs(test, error)
+        test.passed = False
         TestProtocolClient.addError(self, test, error, details=details)
 
     def addFailure(self, test, error): # pylint: disable-msg=W0221
         self._wassuccess = False
+        #TestProtocolClient does not call TestResult.addFailure
+        test.passed = False
         fixTestCase(test)
         error, details = self._getArgs(test, error)
         TestProtocolClient.addFailure(self, test, error, details=details)

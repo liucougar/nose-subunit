@@ -21,6 +21,7 @@ Enable this plugin with `--with-subunit`. This plugin is known to work with foll
   - `multiprocess` plugin
   - `failuredetail` plugin
   - `stopOnFailure` builtin feature (enabled by `-x`/`--stop`)
+  - `testid` plugin
 
 The following plugins are known to conflict with subunit plugin:
 
