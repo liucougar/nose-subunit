@@ -12,7 +12,7 @@ setup(
     platforms="Independent",
     install_requires = [
         "nose>=0.11",
-	#subunit should go here when it's easy installable
+	"python-subunit",
     ],
     scripts = [],
     license="BSD",
