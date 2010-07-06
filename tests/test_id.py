@@ -37,8 +37,12 @@ class TestTestIdLoopFailed(TestTestId):
     def runTest(self):
         if not TestTestId.idfilepresent:
             raise SkipTest('TestTestId failed')
-        self.getFedSubunitServer()
-        result = self.testResult
-        self.assertEqual(result.testsRun, 2)
-        self.assertEqual(len(result.errors), 1)
-        self.assertEqual(len(result.failures), 1)
+        try:
+            self.getFedSubunitServer()
+            result = self.testResult
+            self.assertEqual(result.testsRun, 2)
+            self.assertEqual(len(result.errors), 1)
+            self.assertEqual(len(result.failures), 1)
+        finally:
+            if os.path.isfile(idfile):
+                os.remove(idfile)
