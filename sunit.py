@@ -48,7 +48,6 @@ class SubunitTestResult(TestProtocolClient):
         self.config = config
         self.descriptions = descriptions
         self.stream = stream #this is to make multiprocess plugin happy
-        self.isTop = kwargs.get("isTop", False)
         self.useDetails = kwargs.get("useDetails", False)
         self._wassuccess = True
         TestProtocolClient.__init__(self, stream)
@@ -145,8 +144,6 @@ class SubunitTestResult(TestProtocolClient):
     def printErrors(self, *args):
         pass
     def printSummary(self, *args): # pylint: disable-msg=W0613
-        #this function is only being called on the top SubunitTestResult,
-        #so no need to check isTop here
         self.addTime()
 
 def _getOption(options, name, default):
@@ -167,7 +164,6 @@ class Subunit(Plugin):
     useDetails = False
     multiprocess_workers = 0
     config = None
-    topAssigned = False
     loaderClass = None
     
     def configure(self, options, conf):
@@ -210,20 +206,13 @@ don't know how to attach to it.''')
                                       verbosity=self.config.verbosity,
                                       config=self.config,
                                       loaderClass=self.loaderClass)
-        
-        runner.isTop = not self.topAssigned
-
-        self.topAssigned = True
 
         runner.useDetails = self.useDetails
         def _makeResult(self):
             result = SubunitTestResult(self.stream, self.descriptions,
-                self.config, useDetails=self.useDetails, isTop=self.isTop)
+                self.config, useDetails=self.useDetails)
+            result.addTime()
             return result
         runner._makeResult = instancemethod(_makeResult, 
           runner, runner.__class__)
         return runner
-    
-    def prepareTestResult(self, result): # pylint: disable-msg=R0201
-        if result.isTop:
-            result.addTime()

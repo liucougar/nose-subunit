@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="nose-subunit",
-    version="0.1.2",
+    version="0.2",
     description="""Subunit output adapter for nose""",
     long_description="""Change output of the nose testing tool result into subunit format.""",
     author="liucougar",
@@ -11,7 +11,7 @@ setup(
     download_url="http://pypi.python.org/pypi/nose-subunit/",
     platforms="Independent",
     install_requires = [
-        "nose>=0.11",
+        "nose>=0.11.3",
 	"python-subunit",
     ],
     scripts = [],

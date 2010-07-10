@@ -1,3 +1,9 @@
+2010-07-10 liucougar <liucougar@gmail.com>
+  0.2 released:
+    * compatible with nose>=0.11.3 (requires at least nose 0.11.3)
+    * this plugin is easy-install friendly: it will pull in all dependencies
+      as needed (python-subunit is now easy-installable), no need to install
+      subunit manually any more
 2010-07-01 liucougar <liucougar@gmail.com>
   0.1.2 Bug Fix Release:
     * stopOnFailure nose plugin compatibility
