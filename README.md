@@ -4,14 +4,14 @@ Nose-Subunit
 This [nose] plugin changes the default output to [subunit] format. This can be used along with [buildbot] to have better reports.
 
 Installation
--------
+------------
 nose-subunit apparently depends on both `nosetests` and `subunit`.
 
-The following command would install `nose-subunit` and `nosetests` if it's not already installed:
+The following command would install `nose-subunit` and all its dependencies:
 
 	easy_install nose-subunit
 
-However, the above command won't pull in `subunit`, because subunit is not easy-installable. Please install subunit through your distribution's package management system (`emerge`, `yum` etc.), or install it manually.
+nose-subunit can be also be downloaded manually from [pypi] or [github]
 
 Usage
 -----
@@ -38,4 +38,6 @@ under the root of nose-subunit, run
   [nose]: http://somethingaboutorange.com/mrl/projects/nose/
   [subunit]: https://launchpad.net/subunit/
   [buildbot]: http://buildbot.net/
-  [report your experience]: mailto:liucougar@gmail.com
+  [pypi]: http://pypi.python.org/pypi/nose-subunit/
+  [github]: http://github.com/liucougar/nose-subunit/downloads
+  [report your experience]: http://github.com/liucougar/nose-subunit/issues
