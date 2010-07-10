@@ -11,7 +11,7 @@ The following command would install `nose-subunit` and all its dependencies:
 
 	easy_install nose-subunit
 
-nose-subunit can be also be downloaded manually from [pypi] or [github]
+nose-subunit can also be downloaded manually from [pypi] or [github]
 
 Usage
 -----
