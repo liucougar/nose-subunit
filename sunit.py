@@ -67,7 +67,7 @@ class SubunitTestResult(TestProtocolClient):
     #so in such a case, subunit won't print nose.failure.Failure.runTest
     #as the test case name
     def beforeTest(self, test): # pylint: disable-msg=R0201
-        if isinstance(test.test, NoseFailure):
+        if getattr(test, 'test', None) and isinstance(test.test, NoseFailure):
             def newid(*args): # pylint: disable-msg=W0613
                 #test.address() returns a 3 item tuple, the first one
                 #is the abspath to the py file, the second one is
@@ -216,3 +216,5 @@ don't know how to attach to it.''')
         runner._makeResult = instancemethod(_makeResult, 
           runner, runner.__class__)
         return runner
+    #def startContext(self, context):
+    #    import pdb;pdb.set_trace()

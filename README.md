@@ -22,10 +22,11 @@ Enable this plugin with `--with-subunit`. This plugin is known to work with foll
   - `failuredetail` plugin
   - `stopOnFailure` builtin feature (enabled by `-x`/`--stop`)
   - `testid` plugin
+  - `collectonly` plugin:
 
 The following plugins are known to conflict with subunit plugin:
 
-  - `collectonly` plugin: If you are only collecting tests, you probably don't care about the output
+  - None
 
 Nose plugins not mentioned here are not tested by the author. Please feel free to [report your experience] about using nose-subunit with other nose plugins.
 
