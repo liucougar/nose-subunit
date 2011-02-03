@@ -7,8 +7,8 @@ from tests import SubunitPluginTester, getTestPath
 
 
 class TestModule(SubunitPluginTester):
-    '''test failures in setup_package could is properly captured'''
-    suitepath = getTestPath("module")
+    '''test failures in setup_package is properly captured'''
+    suitepath = getTestPath("../data/module")
     def runTest(self):
         self.getFedSubunitServer()
         result = self.testResult
