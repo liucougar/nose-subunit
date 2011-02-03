@@ -193,12 +193,10 @@ class Subunit(Plugin):
         """Remember loader class so MultiProcessTestRunner can instantiate
         the right loader.
         """
-        #import pdb;pdb.set_trace()
-        self.loaderClass = loader.__class__ 
+        self.loaderClass = loader.__class__
+
+        #monkey patch SuiteFactory.__call__ function to count how many tests there are
         sC = loader.suiteClass
-	#self.totalTests = 0
-	#plugin = self
-        #orig__call = sC.__call__
         def __call__(tests=(), **kw):
             is_suite = isinstance(tests, TestSuite)
             if callable(tests) and not is_suite:
@@ -222,6 +220,7 @@ class Subunit(Plugin):
                         suite.run = instancemethod(run, suite, suite.__class__)
                     suite._curCounts = totalTests
             return suite
+        #assigning to suiteClass.__call__ won't make it work: calling suiteClass() won't trigger the __call__ attribute
         loader.suiteClass = __call__
 
     #so we stick with prepareTestResult for now
