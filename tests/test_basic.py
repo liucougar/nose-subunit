@@ -18,4 +18,6 @@ class TestBasic(SubunitPluginTester):
         #not being called
         self.assertFalse("----------" in self.output)
         
+        #make sure progress is properly reported
+	self.assertEqual((1, 1), result._progress[0])
     

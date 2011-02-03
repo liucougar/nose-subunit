@@ -1,3 +1,7 @@
+UNRELEASED liucougar <liucougar@gmail.com>
+  0.3:
+    * generate progress report (using subunit PROGRESS_CUR format)
+    * compatible with collectonly plugin
 2010-07-10 liucougar <liucougar@gmail.com>
   0.2 released:
     * compatible with nose>=0.11.3 (requires at least nose 0.11.3)

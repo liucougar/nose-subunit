@@ -4,10 +4,11 @@ output.
 
 from new import instancemethod
 from datetime import datetime
+from unittest import TestSuite
 
 from testtools.content import Content, ContentType, TracebackContent
 #can't name this file as subunit, otherwise the following line fails
-from subunit import TestProtocolClient, iso8601
+from subunit import TestProtocolClient, iso8601, PROGRESS_CUR
 
 from nose.plugins import Plugin
 from nose.util import isclass
@@ -152,6 +153,13 @@ def _getOption(options, name, default):
     except AttributeError:
         return default
 
+def printProgress(suite, result):
+    c = getattr(suite, '_curCounts', 0)
+    if c:
+        result.progress(c, PROGRESS_CUR)
+        suite._curCounts = 0
+        return True
+
 class Subunit(Plugin):
     """Output test results in subunit format
     """
@@ -185,7 +193,36 @@ class Subunit(Plugin):
         """Remember loader class so MultiProcessTestRunner can instantiate
         the right loader.
         """
+        #import pdb;pdb.set_trace()
         self.loaderClass = loader.__class__ 
+        sC = loader.suiteClass
+	#self.totalTests = 0
+	#plugin = self
+        #orig__call = sC.__call__
+        def __call__(tests=(), **kw):
+            is_suite = isinstance(tests, TestSuite)
+            if callable(tests) and not is_suite:
+                tests = list(tests())
+            elif is_suite:
+                tests = [tests]
+            suite = sC(tests, **kw)
+            if not is_suite:
+                if not getattr(tests, '__len__', None):
+                    lt = tests.tests
+                else:
+                    lt = tests
+                totalTests = sum(1 for i in lt if not isinstance(i, TestSuite))#, tests, [i.__class__ for i in lt]
+                if totalTests:
+                    if getattr(suite, '_curCounts', None) is None:
+                        suite._curCounts = 0
+                        origrun = suite.run
+                        def run(self, result, *args):
+                            printProgress(self, result)
+                            origrun(result, *args)
+                        suite.run = instancemethod(run, suite, suite.__class__)
+                    suite._curCounts = totalTests
+            return suite
+        loader.suiteClass = __call__
 
     #so we stick with prepareTestResult for now
     def prepareTestRunner(self, runner):
@@ -201,8 +238,26 @@ don't know how to attach to it.''')
         #from executing. so if multiprocess is enabled, we need to create 
         #MultiProcessTestRunner
         if self.multiprocess_workers:
+            #MultiProcessTestRunner.run does not actually calls suite.run,
+            #so our monkey patched version in SuiteFactory.__call__ will
+            #not be called. instead we monkey patch nextBatch will be 
+            #called by MultiProcessTestRunner.run to collect all tests
             from nose.plugins.multiprocess import MultiProcessTestRunner
-            runner = MultiProcessTestRunner(stream=runner.stream,
+            class SubunitMultiProcessTestRunner(MultiProcessTestRunner):
+                _top = 1
+                def nextBatch(self, test):
+                    top = self._top
+                    if top:
+                        self._top = 0
+                    self._checkCount(test)
+                    for batch in MultiProcessTestRunner.nextBatch(self, test):
+                        #if top:
+                        #    self._checkCount(batch)
+                        yield batch
+                def _checkCount(self, s):
+                    printProgress(s, self.result)
+
+            runner = SubunitMultiProcessTestRunner(stream=runner.stream,
                                       verbosity=self.config.verbosity,
                                       config=self.config,
                                       loaderClass=self.loaderClass)
@@ -212,9 +267,13 @@ don't know how to attach to it.''')
             result = SubunitTestResult(self.stream, self.descriptions,
                 self.config, useDetails=self.useDetails)
             result.addTime()
+            #save the result so it can be used in SubunitMultiProcessTestRunner._checkCount
+            self.result = result
             return result
         runner._makeResult = instancemethod(_makeResult, 
           runner, runner.__class__)
         return runner
     #def startContext(self, context):
-    #    import pdb;pdb.set_trace()
+    #    print context, '*'*60
+
+# vi: set filetype=python tabstop=4 softtabstop=4 shiftwidth=4 expandtab:

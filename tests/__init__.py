@@ -16,12 +16,15 @@ class ServerTestResult(unittest.TestResult):
         unittest.TestResult.__init__(self)
         self.skips = []
         self.times = []
+        self._progress = []
     def addSkip(self, test, error=None, details=None):
         self.skips.append((test,details or self._exc_info_to_string(error, test)))
     def addError(self, test, error=None, details=None):
         self.errors.append((test, details or self._exc_info_to_string(error, test)))
     def addFailure(self, test, error=None, details=None):
         self.failures.append((test, details or self._exc_info_to_string(error, test)))
+    def progress(self, offset, whence):
+        self._progress.append((offset, whence))
     def time(self, a_datetime):
         self.times.append(a_datetime)
     #def _exc_info_to_details(error, test):

@@ -12,6 +12,8 @@ class TestStopOnFailure(SubunitPluginTester):
         result = self.testResult
         self.assertEqual(result.testsRun, 1)
         self.assertEqual(len(result.failures), 1)
+        #make sure progress is properly reported
+        self.assertTrue("progress: +2" in self.output)
 
 class TestStopOnError(SubunitPluginTester):
     args = ["-x"]
@@ -22,3 +24,5 @@ class TestStopOnError(SubunitPluginTester):
         result = self.testResult
         self.assertEqual(result.testsRun, 1)
         self.assertEqual(len(result.errors), 1)
+        #make sure progress is properly reported
+	self.assertEqual((2, 1), result._progress[0])

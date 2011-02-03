@@ -1,8 +1,8 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name="nose-subunit",
-    version="0.2",
+    version="0.3",
     description="""Subunit output adapter for nose""",
     long_description="""Change output of the nose testing tool result into subunit format.""",
     author="liucougar",
@@ -16,7 +16,8 @@ setup(
 	#subunit 0.0.6 should specify this explicitly, but it just specify testtools
 	"testtools>=0.9.4",
     ],
-    scripts = [],
+    #packages=['tests'],
+    scripts=[],
     license="BSD",
     zip_safe=False,
     py_modules=['sunit'],
@@ -32,6 +33,6 @@ setup(
         'Programming Language :: Python',
         'Topic :: Software Development :: Testing',
     ],
-    keywords='test unittest nosetests nose plugin',
+    keywords='test unittest nosetests nose plugin subunit',
     test_suite = 'nose.collector'
 )
