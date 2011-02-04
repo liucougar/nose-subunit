@@ -22,7 +22,7 @@ Enable this plugin with `--with-subunit`. This plugin is known to work with foll
   - `failuredetail` plugin
   - `stopOnFailure` builtin feature (enabled by `-x`/`--stop`)
   - `testid` plugin
-  - `collectonly` plugin:
+  - `collectonly` plugin: progress won't be reported if collectonly is enabled
 
 The following plugins are known to conflict with subunit plugin:
 

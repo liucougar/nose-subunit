@@ -19,5 +19,5 @@ class TestBasic(SubunitPluginTester):
         self.assertFalse("----------" in self.output)
         
         #make sure progress is properly reported
-	self.assertEqual((1, 1), result._progress[0])
+	self.assertEqual((3, 1), result._progress[0])
     

@@ -10,6 +10,7 @@ from testtools.content import Content, ContentType, TracebackContent
 #can't name this file as subunit, otherwise the following line fails
 from subunit import TestProtocolClient, iso8601, PROGRESS_CUR
 
+from nose.suite import LazySuite
 from nose.plugins import Plugin
 from nose.util import isclass
 from nose.result import _exception_detail
@@ -147,19 +148,6 @@ class SubunitTestResult(TestProtocolClient):
     def printSummary(self, *args): # pylint: disable-msg=W0613
         self.addTime()
 
-def _getOption(options, name, default):
-    try:
-        return getattr(options, name)
-    except AttributeError:
-        return default
-
-def printProgress(suite, result):
-    c = getattr(suite, '_curCounts', 0)
-    if c:
-        result.progress(c, PROGRESS_CUR)
-        suite._curCounts = 0
-        return True
-
 class Subunit(Plugin):
     """Output test results in subunit format
     """
@@ -174,18 +162,32 @@ class Subunit(Plugin):
     config = None
     loaderClass = None
     
+    def options(self, parser, env):
+        """Register commandline options
+        """
+        Plugin.options(self, parser, env)
+        parser.add_option(
+            "--no-preload", action="store_false",
+            default=not env.get("NOSE_NO_PRELOAD"), dest="preload",
+            help="Don't preload any nose LazySuite so instead of a single "
+            "subunit progress output, this will generate "
+            "more than one. Useful if preloading all tests is not "
+            "feasible [NOSE_NO_PRELOAD]")
+
     def configure(self, options, conf):
         if not self.can_configure:
             return
         Plugin.configure(self, options, conf)
         
         self.config = conf
-        
+
+        self.preload = options.preload
+            
         #detailedErrors is defined in failuredetail plugin
-        self.useDetails = _getOption(options, 
+        self.useDetails = getattr(options, 
           "detailedErrors", self.useDetails)
         #multiprocess_workers defined in multiprocess plugin
-        self.multiprocess_workers = _getOption(options, 
+        self.multiprocess_workers = getattr(options, 
           "multiprocess_workers", self.multiprocess_workers)
 
     #copied from multiprocess plugin
@@ -197,6 +199,7 @@ class Subunit(Plugin):
 
         #monkey patch SuiteFactory.__call__ function to count how many tests there are
         sC = loader.suiteClass
+        plugin = self
         def __call__(tests=(), **kw):
             is_suite = isinstance(tests, TestSuite)
             if callable(tests) and not is_suite:
@@ -209,20 +212,21 @@ class Subunit(Plugin):
                     lt = tests.tests
                 else:
                     lt = tests
-                totalTests = sum(1 for i in lt if not isinstance(i, TestSuite))#, tests, [i.__class__ for i in lt]
-                if totalTests:
-                    if getattr(suite, '_curCounts', None) is None:
-                        suite._curCounts = 0
-                        origrun = suite.run
-                        def run(self, result, *args):
-                            printProgress(self, result)
-                            origrun(result, *args)
-                        suite.run = instancemethod(run, suite, suite.__class__)
-                    suite._curCounts = totalTests
+                #preload all lazy load suite, so we can count totalTests properly
+                if self.preload:
+                    for t in lt:
+                        plugin.preloadLazySuite(t)
+                plugin.totalTests += sum(1 for i in lt if not isinstance(i, TestSuite))
+                #plugin.totalTests += sum(i.countTestCases() for i in lt)
+                #import pdb;pdb.set_trace()
+                #print "totalTests", plugin.totalTests, '*'*60
             return suite
         #assigning to suiteClass.__call__ won't make it work: calling suiteClass() won't trigger the __call__ attribute
         loader.suiteClass = __call__
-
+    def preloadLazySuite(self, t):
+        if isinstance(t, LazySuite):
+            tests = [i for i in t]
+            t._tests = tests
     #so we stick with prepareTestResult for now
     def prepareTestRunner(self, runner):
         #replace _makeResult in the default nose TestRunner to return
@@ -248,13 +252,10 @@ don't know how to attach to it.''')
                     top = self._top
                     if top:
                         self._top = 0
-                    self._checkCount(test)
                     for batch in MultiProcessTestRunner.nextBatch(self, test):
-                        #if top:
-                        #    self._checkCount(batch)
                         yield batch
-                def _checkCount(self, s):
-                    printProgress(s, self.result)
+                    if top:
+                        plugin.printProgress()
 
             runner = SubunitMultiProcessTestRunner(stream=runner.stream,
                                       verbosity=self.config.verbosity,
@@ -262,17 +263,29 @@ don't know how to attach to it.''')
                                       loaderClass=self.loaderClass)
 
         runner.useDetails = self.useDetails
+        plugin = self
         def _makeResult(self):
             result = SubunitTestResult(self.stream, self.descriptions,
                 self.config, useDetails=self.useDetails)
             result.addTime()
-            #save the result so it can be used in SubunitMultiProcessTestRunner._checkCount
-            self.result = result
+            #save the result so it can be used in beforeTest below
+            plugin.result = result
+            #plugin.printProgress()
+            #if plugin.totalTests:
+            #    result.progress(plugin.totalTests, PROGRESS_CUR)
+            #    result.addTime()
             return result
         runner._makeResult = instancemethod(_makeResult, 
           runner, runner.__class__)
+
         return runner
-    #def startContext(self, context):
-    #    print context, '*'*60
+    totalTests = 0
+    def printProgress(self):
+        if self.totalTests:
+            self.result.progress(self.totalTests, PROGRESS_CUR)
+            self.totalTests = 0
+    def beforeTest(self, *args):
+        #print 'beforeTest','='*60
+        self.printProgress()
 
 # vi: set filetype=python tabstop=4 softtabstop=4 shiftwidth=4 expandtab:
