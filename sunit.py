@@ -241,9 +241,9 @@ don't know how to attach to it.''')
         #from executing. so if multiprocess is enabled, we need to create 
         #MultiProcessTestRunner
         if self.multiprocess_workers:
-            #MultiProcessTestRunner.run does not actually calls suite.run,
-            #so our monkey patched version in SuiteFactory.__call__ will
-            #not be called. instead we monkey patch nextBatch will be 
+            #with MultiProcessTestRunner.run, beforeTest is called too 
+            #early, so it will never print any progress info
+            #instead, we have to monkey patch nextBatch which is
             #called by MultiProcessTestRunner.run to collect all tests
             from nose.plugins.multiprocess import MultiProcessTestRunner
             class SubunitMultiProcessTestRunner(MultiProcessTestRunner):
@@ -285,7 +285,6 @@ don't know how to attach to it.''')
             self.result.progress(self.totalTests, PROGRESS_CUR)
             self.totalTests = 0
     def beforeTest(self, *args):
-        #print 'beforeTest','='*60
         self.printProgress()
 
 # vi: set filetype=python tabstop=4 softtabstop=4 shiftwidth=4 expandtab:
