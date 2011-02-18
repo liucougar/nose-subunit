@@ -4,7 +4,7 @@ output.
 
 from new import instancemethod
 from datetime import datetime
-from unittest import TestSuite
+from unittest import TestSuite, TestResult
 
 from testtools.content import Content, ContentType, TracebackContent
 #can't name this file as subunit, otherwise the following line fails
@@ -85,8 +85,18 @@ class SubunitTestResult(TestProtocolClient):
     #addError to have wellformed subunit output
     def startTest(self, test):
         test._subunit_started = True
-        TestProtocolClient.startTest(self, test)
-        
+        #instead of calling TestProtocolClient.startTest(self, test), 
+        #which uses test.id(), we follow what vanilla unittest does
+        self._stream.write("test: %s\n" % self.getDescription(test))
+        TestResult.startTest(self, test)
+
+    #copied from unittest._TextTestResult (changed str(test) to test.id())
+    def getDescription(self, test):
+        if self.descriptions:
+            return test.shortDescription() or test.id()
+        else:
+            return test.id()
+
     #modified from nose/result.addError
     def addError(self, test, error): # pylint: disable-msg=W0221
         """Overrides normal addError to add support for
@@ -136,10 +146,34 @@ class SubunitTestResult(TestProtocolClient):
         if reason is None:
             self._addOutcome(outcome, test, error=None, details=details)
         else:
-            self._stream.write(outcome+": %s [\n" % test.id())
+            self._stream.write(outcome+": %s [\n" % self.getDescription(test))
             self._stream.write("%s\n" % reason)
             self._stream.write("]\n")
-    
+
+    #subunit.TestProtocolClient _addNonFailOutcome always uses test.id()
+    #while the vanilla unittest uses getDescription() if self.descriptions
+    #TODO: report this bug to subunit
+    def _addOutcome(self, outcome, test, *args, **kwargs):
+        if self.descriptions:
+            if not hasattr(test, '_id_') and test.shortDescription():
+                test._id_ = test.id
+                def fakeid():
+                    return test.shortDescription() or test.id()
+                test.id = fakeid
+        TestProtocolClient._addOutcome(self, outcome, test, *args, **kwargs)
+        if self.descriptions and hasattr(test, '_id_'):
+            test.id = test._id_
+
+    #use _addOutcome so it will properly use our own test id
+    def addSuccess(self, test, details=None):
+        """Report a success in a test."""
+        self._stream.write("successful: %s" % self.getDescription(test))
+        if not details:
+            self._stream.write("\n")
+        else:
+            self._write_details(details)
+            self._stream.write("]\n")
+
     def addTime(self):
         self.time(datetime.now(iso8601.UTC))
     #the nose testrunner would call these two functions
